@@ -16,7 +16,9 @@ repoints the driver at the proxy:
 
 ```js
 if (process.env.NODE_ENV === 'development') {
-  const { hostname, port } = new URL(process.env.DATABASE_URL.replace('postgres://', 'http://'));
+  const { hostname, port } = new URL(
+    process.env.DATABASE_URL.replace('postgres://', 'http://')
+  );
   neonConfig.fetchEndpoint = `http://${hostname}:${port || 5432}/sql`;
   neonConfig.useSecureWebSocket = false;
   neonConfig.poolQueryViaFetch = true;
@@ -27,13 +29,13 @@ In production this block is skipped entirely and `DATABASE_URL` is used as-is ag
 Nothing else in the codebase needs to know which environment it's running in — only
 `DATABASE_URL` and `NODE_ENV` change between the two compose files.
 
-| | Development (`docker-compose.dev.yml`) | Production (`docker-compose.prod.yml`) |
-|---|---|---|
-| `NODE_ENV` | `development` | `production` |
+|                | Development (`docker-compose.dev.yml`)                                                                     | Production (`docker-compose.prod.yml`)                     |
+| -------------- | ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| `NODE_ENV`     | `development`                                                                                              | `production`                                               |
 | `DATABASE_URL` | `postgres://neon:npg@neon-local:5432/neondb?sslmode=require` (fixed, points at the `neon-local` container) | Your real Neon Cloud connection string (`...neon.tech...`) |
-| DB backend | Neon Local proxy → ephemeral Neon branch | Neon Cloud, directly |
-| Env file | `.env.development` | `.env.production` |
-| Source code | Bind-mounted, hot reload via `node --watch` | Baked into the image, immutable |
+| DB backend     | Neon Local proxy → ephemeral Neon branch                                                                   | Neon Cloud, directly                                       |
+| Env file       | `.env.development`                                                                                         | `.env.production`                                          |
+| Source code    | Bind-mounted, hot reload via `node --watch`                                                                | Baked into the image, immutable                            |
 
 ## Prerequisites
 

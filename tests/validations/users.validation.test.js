@@ -32,7 +32,9 @@ describe('updateUserSchema', () => {
   });
 
   it('normalizes email to lowercase and trims whitespace', () => {
-    const result = updateUserSchema.safeParse({ email: '  Jane@Example.com  ' });
+    const result = updateUserSchema.safeParse({
+      email: '  Jane@Example.com  ',
+    });
 
     expect(result.success).toBe(true);
     expect(result.data.email).toBe('jane@example.com');
