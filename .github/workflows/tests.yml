@@ -1,0 +1,79 @@
+name: Tests
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+  pull_request:
+    branches:
+      - main
+      - staging
+
+jobs:
+  test:
+    name: Run Test Suite
+    runs-on: ubuntu-latest
+
+    env:
+      NODE_ENV: test
+      NODE_OPTIONS: --experimental-vm-modules
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        id: test
+        run: npm test -- --ci --coverage
+        continue-on-error: true
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 30
+
+      - name: Generate test summary
+        if: always()
+        run: |
+          echo "## Test Results" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          if [ "${{ steps.test.outcome }}" == "success" ]; then
+            echo "✅ All tests passed." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "❌ Test run failed. See job logs for details." >> "$GITHUB_STEP_SUMMARY"
+          fi
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          if [ -f "coverage/coverage-summary.json" ]; then
+            echo "### Coverage Summary" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "| Metric | Percentage |" >> "$GITHUB_STEP_SUMMARY"
+            echo "| ------ | ---------- |" >> "$GITHUB_STEP_SUMMARY"
+            node -e "
+              const s = require('./coverage/coverage-summary.json').total;
+              for (const key of ['lines', 'statements', 'functions', 'branches']) {
+                console.log(\`| \${key} | \${s[key].pct}% |\`);
+              }
+            " >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "_No coverage summary found._" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Annotate test failure
+        if: steps.test.outcome == 'failure'
+        run: |
+          echo "::error title=Tests failed::One or more tests failed. Check the 'Run tests' step output above and the uploaded coverage-report artifact for details."
+          exit 1
