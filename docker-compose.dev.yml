@@ -1,0 +1,37 @@
+services:
+  neon-local:
+    image: neondatabase/neon_local:latest
+    container_name: acquisitions-neon-local
+    env_file:
+      - .env.development
+    ports:
+      - '5432:5432'
+    networks:
+      - acquisitions-network
+
+  app:
+    build:
+      context: .
+      target: development
+    container_name: acquisitions-app-dev
+    env_file:
+      - .env.development
+    ports:
+      - '3000:3000'
+    volumes:
+      # Bind-mount source for hot reload via `node --watch`; node_modules
+      # stays inside the image so host/container platform differences don't
+      # break native deps.
+      - ./src:/usr/src/app/src
+      - ./drizzle:/usr/src/app/drizzle
+      - ./drizzle.config.js:/usr/src/app/drizzle.config.js
+      - ./package.json:/usr/src/app/package.json
+      - /usr/src/app/node_modules
+    depends_on:
+      - neon-local
+    networks:
+      - acquisitions-network
+
+networks:
+  acquisitions-network:
+    driver: bridge

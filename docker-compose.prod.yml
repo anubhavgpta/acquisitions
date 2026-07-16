@@ -1,0 +1,28 @@
+services:
+  app:
+    build:
+      context: .
+      target: production
+    image: acquisitions-app:latest
+    container_name: acquisitions-app-prod
+    # In real deployments prefer injecting DATABASE_URL and other secrets via
+    # your platform's secret manager / `-e` flags instead of shipping
+    # .env.production as a file; env_file is kept here for parity with the
+    # dev compose file and for local "prod-like" testing.
+    env_file:
+      - .env.production
+    ports:
+      - '3000:3000'
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost:3000/health']
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - acquisitions-network
+
+networks:
+  acquisitions-network:
+    driver: bridge
