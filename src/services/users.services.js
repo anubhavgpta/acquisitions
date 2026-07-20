@@ -66,9 +66,10 @@ export const updateUser = async (id, updates) => {
 
     // Add updated_at timestamp
     const updateData = {
-      ...updates,
       updated_at: new Date(),
     };
+    if (updates.email !== undefined) updateData.email = updates.email;
+    if (updates.name !== undefined) updateData.name = updates.name;
 
     const [updatedUser] = await db
       .update(users)
