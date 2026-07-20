@@ -12,7 +12,6 @@ export const updateUserSchema = z
   .object({
     name: z.string().min(2).max(255).trim().optional(),
     email: z.string().trim().toLowerCase().email().max(255).optional(),
-    role: z.enum(['user', 'admin']).optional(),
   })
   .refine(
     data => {
