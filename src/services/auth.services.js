@@ -22,7 +22,7 @@ export const comparePassword = async (password, hashedPassword) => {
   }
 };
 
-export const createUser = async ({ name, email, password, role = 'user' }) => {
+export const createUser = async ({ name, email, password }) => {
   try {
     const existingUser = await db
       .select()
@@ -37,7 +37,7 @@ export const createUser = async ({ name, email, password, role = 'user' }) => {
 
     const [newUser] = await db
       .insert(users)
-      .values({ name, email, password: password_hash, role })
+      .values({ name, email, password: password_hash, role: 'user' })
       .returning({
         id: users.id,
         name: users.name,
