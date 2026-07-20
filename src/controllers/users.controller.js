@@ -13,6 +13,21 @@ import { formatValidationError } from '#utils/format.js';
 
 export const fetchAllUsers = async (req, res, next) => {
   try {
+    // Authorization checks
+    if (!req.user) {
+      return res.status(401).json({
+        error: 'Authentication required',
+        message: 'You must be logged in to view users',
+      });
+    }
+
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({
+        error: 'Access denied',
+        message: 'Only administrators can view all users',
+      });
+    }
+
     logger.info('Getting users...');
 
     const allUsers = await getAllUsers();
@@ -30,6 +45,14 @@ export const fetchAllUsers = async (req, res, next) => {
 
 export const fetchUserById = async (req, res, next) => {
   try {
+    // Authorization checks
+    if (!req.user) {
+      return res.status(401).json({
+        error: 'Authentication required',
+        message: 'You must be logged in to view user information',
+      });
+    }
+
     logger.info(`Getting user by id: ${req.params.id}`);
 
     // Validate the user ID parameter
@@ -43,6 +66,14 @@ export const fetchUserById = async (req, res, next) => {
     }
 
     const { id } = validationResult.data;
+
+    if (req.user.role !== 'admin' && req.user.id !== id) {
+      return res.status(403).json({
+        error: 'Access denied',
+        message: 'You can only view your own information',
+      });
+    }
+
     const user = await getUserById(id);
 
     logger.info(`User ${user.email} retrieved successfully`);
