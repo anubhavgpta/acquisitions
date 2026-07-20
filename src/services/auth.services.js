@@ -62,17 +62,16 @@ export const authenticateUser = async ({ email, password }) => {
       .where(eq(users.email, email))
       .limit(1);
 
-    if (!existingUser) {
-      throw new Error('User not found');
-    }
+    const dummyHash = '$2a$10$vI8aWBnW3fID.ZQ4/zo1G.q1lRps.9cGLcZEiGDMVr5yUP1KUOYTa';
+    const hashToCompare = existingUser ? existingUser.password : dummyHash;
 
     const isPasswordValid = await comparePassword(
       password,
-      existingUser.password
+      hashToCompare
     );
 
-    if (!isPasswordValid) {
-      throw new Error('Invalid password');
+    if (!existingUser || !isPasswordValid) {
+      throw new Error('Invalid email or password');
     }
 
     logger.info(`User ${existingUser.email} authenticated successfully`);
